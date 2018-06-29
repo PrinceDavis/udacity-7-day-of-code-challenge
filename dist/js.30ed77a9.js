@@ -103,7 +103,47 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
   // Override the current require with this new one
   return newRequire;
-})({17:[function(require,module,exports) {
+})({10:[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var _baseUrl = "https://free.currencyconverterapi.com/api/v5";
+
+var CurrencyConverterApi = exports.CurrencyConverterApi = function () {
+  function CurrencyConverterApi() {
+    _classCallCheck(this, CurrencyConverterApi);
+  }
+
+  _createClass(CurrencyConverterApi, null, [{
+    key: "fetchCurrencies",
+    value: function fetchCurrencies() {
+      console.log("making web request");
+      var url = _baseUrl + "/currencies";
+      return fetch(url).then(function (res) {
+        return res.json();
+      });
+    }
+  }, {
+    key: "getRate",
+    value: function getRate(from, to) {
+      var query = from + "_" + to;
+      var url = _baseUrl + "/convert?q=" + query + "&compact=ultra";
+      return fetch(url).then(function (res) {
+        return res.json();
+      });
+    }
+  }]);
+
+  return CurrencyConverterApi;
+}();
+},{}],17:[function(require,module,exports) {
 'use strict';
 
 (function() {
@@ -421,13 +461,17 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 }());
 
-},{}],15:[function(require,module,exports) {
+},{}],13:[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.App = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _currencyConverterApi = require("./currency-converter-api");
 
 var _idb = require("idb");
 
@@ -437,14 +481,51 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var App = exports.App = function App() {
-  _classCallCheck(this, App);
+var openDatabase = function openDatabase() {
+  if (!navigator.serviceWorker) return Promise.resolve();
+
+  return _idb2.default.open("tg-currency-convertr", 1, function (upgradeDb) {
+    var currencyStore = upgradeDb.createObjectStore("currency", { keyPath: "id" });
+
+    currencyStore.createIndex("by-id", "id");
+  });
 };
-},{"idb":17}],14:[function(require,module,exports) {
+
+var App = exports.App = function () {
+  function App() {
+    _classCallCheck(this, App);
+
+    this._dbPromise = openDatabase();
+    this._registerServiceWorker();
+    _currencyConverterApi.CurrencyConverterApi.fetchCurrencies().then(function (data) {
+      console.log(data);
+    }).catch(function (err) {
+      return console.log(err);
+    });
+  }
+
+  _createClass(App, [{
+    key: "_registerServiceWorker",
+    value: function _registerServiceWorker() {
+      if (!navigator.serviceWorker) return;
+      navigator.serviceWorker.register("/sw.js").then(function () {});
+    }
+  }, {
+    key: "_convertEventHandler",
+    value: function _convertEventHandler(event) {
+      _currencyConverterApi.CurrencyConverterApi.getRate();
+    }
+  }]);
+
+  return App;
+}();
+},{"./currency-converter-api":10,"idb":17,"./../../sw.js":[["sw.js",5],"sw.map",5]}],12:[function(require,module,exports) {
 "use strict";
 
-require("./App");
-},{"./App":15}],16:[function(require,module,exports) {
+var _App = require("./App");
+
+new _App.App();
+},{"./App":13}],7:[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 
@@ -473,7 +554,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '56133' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '60725' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 
@@ -614,5 +695,5 @@ function hmrAccept(bundle, id) {
     return hmrAccept(global.parcelRequire, id);
   });
 }
-},{}]},{},[16,14], null)
+},{}]},{},[7,12], null)
 //# sourceMappingURL=/js.30ed77a9.map

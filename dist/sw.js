@@ -104,11 +104,11 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   // Override the current require with this new one
   return newRequire;
 })({5:[function(require,module,exports) {
-var cacheName = "tg-currency--convertr3";
+var cacheName = "tg-currency--convertr5";
 
 self.addEventListener("install", function (event) {
   event.waitUntil(caches.open(cacheName).then(function (cache) {
-    return cache.addAll(["/index.html"]);
+    return cache.addAll(["/", "/index.html"]);
   }));
 });
 
@@ -121,17 +121,16 @@ self.addEventListener("activate", function (event) {
 });
 
 self.addEventListener("fetch", function (event) {
-  event.respondWith(caches.open(cacheName).then(function (cache) {
-    return cache.match(event.request).then(function (res) {
-      if (!res) {
-        return fetch(event.request).then(function (netRes) {
+  if (event.request.url.indexOf("currencies") === -1) {
+    event.respondWith(caches.open(cacheName).then(function (cache) {
+      return cache.match(event.request).then(function (res) {
+        return res || fetch(event.request).then(function (netRes) {
           cache.put(event.request, netRes.clone());
           return netRes;
         });
-      }
-      return res;
-    });
-  }));
+      });
+    }));
+  }
 });
 },{}],7:[function(require,module,exports) {
 var global = arguments[3];
@@ -162,7 +161,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '56904' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '60725' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 

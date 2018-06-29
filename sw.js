@@ -1,10 +1,11 @@
-const cacheName = "tg-currency--convertr3";
+const cacheName = "tg-currency--convertr5";
 
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(cacheName)
       .then(cache => {
         return cache.addAll([
+          "/",
           "/index.html"
         ]);
       })
@@ -16,21 +17,22 @@ self.addEventListener("activate", event => {
     caches.keys().then(keys => {
       return keys.map(key => key !== cacheName && caches.delete(key))
     })
-  )
-})
+  );
+});
 
 self.addEventListener("fetch", event => {
-  event.respondWith(
-    caches.open(cacheName).then(cache => {
-      return cache.match(event.request).then(res => {
-        if(!res) {
-          return fetch(event.request).then(netRes => {
-            cache.put(event.request, netRes.clone());
-            return netRes;
-          });
-        }
-        return res;
-      });
-    })
-  );
+  if(event.request.url.indexOf("currencies") === -1) {
+    event.respondWith(
+      caches.open(cacheName).then(cache => {
+        return cache.match(event.request).then(res => 
+          
+          res || fetch(event.request).then(netRes => {
+                    cache.put(event.request, netRes.clone());
+                    return netRes;
+                  })
+        );
+      })
+    );
+  }
+  
 });
