@@ -3,7 +3,6 @@ const _baseUrl = "https://free.currencyconverterapi.com/api/v5";
 export class CurrencyConverterApi {
   
   static fetchCurrencies() {
-    console.log("making web request");
     const url = `${_baseUrl}/currencies`
     return fetch(url).then(res => res.json());
   }

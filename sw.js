@@ -1,4 +1,4 @@
-const cacheName = "tg-currency--convertr5";
+const cacheName = "tg-currency--convertr1";
 
 self.addEventListener("install", event => {
   event.waitUntil(
