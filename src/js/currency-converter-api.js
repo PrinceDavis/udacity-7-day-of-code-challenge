@@ -7,8 +7,8 @@ export class CurrencyConverterApi {
     return fetch(url).then(res => res.json());
   }
 
-  static getRate(from, to) {
-    const query = `${from}_${to}`;
+  static getRate(fromCurrency, toCurrency) {
+    const query = `${fromCurrency}_${toCurrency}`;
     const url = `${_baseUrl}/convert?q=${query}&compact=ultra`;
     return fetch(url).then(res => res.json());
   }

@@ -1,3 +1,5 @@
 import {App} from "./App";
 
-new App();
+new App(
+  document.getElementById("converter")
+);
