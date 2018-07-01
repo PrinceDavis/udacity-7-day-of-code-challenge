@@ -3121,6 +3121,10 @@ var App = exports.App = function () {
       this._convertButton = container.querySelector("#button");
       this._fromInput = container.querySelector("#fromInput");
       this._toInput = container.querySelector("#toInput");
+      this._srcCurrencyAmountInfo = container.querySelector("#info-src-amount");
+      this._srcCurrencyNameInfo = container.querySelector("#info-src-currency");
+      this._tgtCurrencyAmountInfo = container.querySelector("#info-tgt-amount");
+      this._tgtCurrencyNameInfo = container.querySelector("#info-tgt-currency");
 
       this._convertButton.addEventListener("click", this._convertEventHandler.bind(this));
       this._fromInput.onchange = this._convertEventHandler.bind(this);
@@ -3178,20 +3182,25 @@ var App = exports.App = function () {
                 this._toInput.value = total;
                 this._fromInput.value = 1;
 
-                _context2.next = 24;
+                this._srcCurrencyAmountInfo.textContent = 1;
+                this._srcCurrencyNameInfo.textContent = defaultCountry.currencyName;
+                this._tgtCurrencyAmountInfo.textContent = total;
+                this._tgtCurrencyNameInfo.textContent = comparisonCountry.currencyName;
+
+                _context2.next = 28;
                 break;
 
-              case 21:
-                _context2.prev = 21;
+              case 25:
+                _context2.prev = 25;
                 _context2.t0 = _context2["catch"](0);
                 throw _context2.t0;
 
-              case 24:
+              case 28:
               case "end":
                 return _context2.stop();
             }
           }
-        }, _callee2, this, [[0, 21]]);
+        }, _callee2, this, [[0, 25]]);
       }));
 
       function _performDefaultLookup() {

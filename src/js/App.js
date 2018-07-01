@@ -118,10 +118,15 @@ export class App {
     this._convertButton = container.querySelector("#button");
     this._fromInput = container.querySelector("#fromInput");
     this._toInput = container.querySelector("#toInput");
+    this._srcCurrencyAmountInfo = container.querySelector("#info-src-amount");
+    this._srcCurrencyNameInfo = container.querySelector("#info-src-currency");
+    this._tgtCurrencyAmountInfo = container.querySelector("#info-tgt-amount");
+    this._tgtCurrencyNameInfo = container.querySelector("#info-tgt-currency");
 
     this._convertButton.addEventListener("click", this._convertEventHandler.bind(this));
     this._fromInput.onchange = this._convertEventHandler.bind(this);
     this._toInput.onchange = this._convertEventHandler.bind(this);
+
   }
 
   async _performDefaultLookup() {
@@ -152,6 +157,11 @@ export class App {
       const total = calculateRate(rate[rateName], 1);
       this._toInput.value = total;
       this._fromInput.value = 1;
+
+      this._srcCurrencyAmountInfo.textContent = 1;
+      this._srcCurrencyNameInfo.textContent = defaultCountry.currencyName;
+      this._tgtCurrencyAmountInfo.textContent = total;
+      this._tgtCurrencyNameInfo.textContent = comparisonCountry.currencyName;
 
     } catch (error) {
       throw error;
