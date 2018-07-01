@@ -23,5 +23,6 @@ export const calculateRate = (rate, amount) => {
 }
 
 export const getCountryFromIP = () => {
-  return fetch("http://ip-api.com/json").then(res => res.json());
+  const apiKey = "b723884e14638e04eed21a72b2fb19735517eb3713a6285ba8247cc0";
+  return fetch(`https://api.ipdata.co/?api-key=${apiKey}`).then(res => res.json());
 }
