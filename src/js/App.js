@@ -135,7 +135,7 @@ export class App {
 
       const [defaultCountry, comparisonCountry] = await Promise.all([
         this._getCurrencies("US"),
-        this._getCurrencies(countryFromIP.countryCode) // is id the same as countryCode?
+        this._getCurrencies(countryFromIP.country_code) // is id the same as countryCode?
       ]);
 
       const options = this._fromSelect.options;
