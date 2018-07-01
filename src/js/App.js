@@ -1,4 +1,5 @@
 import { openDatabase, convertObjToArray, calculateRate, getCountryFromIP } from "./utils";
+
 import { CurrencyConverterApi } from "./currency-converter-api";
 
 /* To Do */
@@ -94,7 +95,7 @@ export class App {
       }else {
         this._tgtCurrencyAmount.value = total;
 
-        this._srcCurrencyAmountInfo.textContent = event.target.value;
+        this._srcCurrencyAmountInfo.textContent = this._srcCurrencyAmount.value;
         this._srcCurrencyNameInfo.textContent = this._srcCurrency.options[this._srcCurrency.selectedIndex].text;
 
         this._tgtCurrencyAmountInfo.textContent = total;
