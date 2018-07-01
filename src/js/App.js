@@ -116,7 +116,12 @@ export class App {
     this._tgtCurrencyNameInfo = container.querySelector("#info-tgt-currency");
 
     this._srcCurrency.onchange = this._convertEventHandler.bind(this);
+    this._srcCurrency.oninput = this._convertEventHandler.bind(this);
+    
     this._tgtCurrency.onchange = this._convertEventHandler.bind(this);
+    this._tgtCurrency.oninput = this._convertEventHandler.bind(this);
+
+
     this._srcCurrencyAmount.onchange = this._convertEventHandler.bind(this);
     this._tgtCurrencyAmount.onchange = this._convertEventHandler.bind(this);
   }
