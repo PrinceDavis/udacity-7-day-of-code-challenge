@@ -3041,19 +3041,20 @@ var App = exports.App = function () {
   }, {
     key: "_populateView",
     value: function _populateView() {
-      var fromSelect = this._fromSelect;
-      var toSelect = this._toSelect;
-      this._getCurrencies().then(function (currencies) {
+      var _this2 = this;
+
+      this._getCurrencies().then(function (countries) {
         var _iteratorNormalCompletion = true;
         var _didIteratorError = false;
         var _iteratorError = undefined;
 
         try {
-          for (var _iterator = (0, _getIterator3.default)(currencies), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var currency = _step.value;
+          for (var _iterator = (0, _getIterator3.default)(countries), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var country = _step.value;
 
-            fromSelect.options[fromSelect.options.length] = new Option(currency.currencyName, currency.currencyId);
-            toSelect.options[toSelect.options.length] = new Option(currency.currencyName, currency.currencyId);
+            _this2._srcCurrency.options[_this2._srcCurrency.options.length] = new Option(country.currencyName, country.currencyId);
+
+            _this2._tgtCurrency.options[_this2._tgtCurrency.options.length] = new Option(country.currencyName, country.currencyId);
           }
         } catch (err) {
           _didIteratorError = true;
@@ -3073,43 +3074,38 @@ var App = exports.App = function () {
     }
   }, {
     key: "_convertEventHandler",
-    value: function _convertEventHandler() {
-      var _this2 = this;
+    value: function _convertEventHandler(event) {
+      var _this3 = this;
 
-      var fromCurrency = this._fromSelect.options[this._fromSelect.selectedIndex].value;
-      var toCurrency = this._toSelect.options[this._toSelect.selectedIndex].value;
-      var fromAmount = this._fromInput.value;
-      var toAmount = this._toInput.value;
-      var fromCurrencyIsLead = false;
-      var toCurrencyIsLead = false;
-      var rateName = void 0;
-      var amountToUse = void 0;
-
-      if (!fromCurrency || !toCurrency) {
-        alert("Opps! I am having a hard time figuring out what you  me to do");
-        return;
+      var toConvertFromTgt = false;
+      var srcCurrency = this._srcCurrency.options[this._srcCurrency.selectedIndex].value;
+      var tgtCurrency = this._tgtCurrency.options[this._tgtCurrency.selectedIndex].value;
+      var rateName = srcCurrency + "_" + tgtCurrency;
+      var amountToUse = this._srcCurrencyAmount.value;
+      if (event.target.id == "tgt-currency-amount") {
+        toConvertFromTgt = true;
+        rateName = tgtCurrency + "_" + srcCurrency;
+        amountToUse = this._tgtCurrencyAmount.value;
       }
 
-      if (!fromAmount && !toAmount || isNaN(fromAmount) && isNaN(toAmount) || isNaN(fromAmount) && !toAmount || !fromAmount && isNaN(toAmount)) {
-        alert("Opps! I am having a hard time figuring out what you want me to do");
-        return;
-      }
-
-      if (!fromAmount || isNaN(fromAmount)) {
-        toCurrencyIsLead = true;
-        amountToUse = toAmount;
-        rateName = toCurrency + "_" + fromCurrency;
-      } else {
-        fromCurrencyIsLead = true;
-        amountToUse = fromAmount;
-        rateName = fromCurrency + "_" + toCurrency;
-      }
       _currencyConverterApi.CurrencyConverterApi.getRate(rateName).then(function (rate) {
         var total = (0, _utils.calculateRate)(rate[rateName], amountToUse);
-        if (toCurrencyIsLead) {
-          _this2._fromInput.value = total;
+        if (toConvertFromTgt) {
+          _this3._srcCurrencyAmount.value = total;
+
+          _this3._srcCurrencyAmountInfo.textContent = event.target.value;
+          _this3._srcCurrencyNameInfo.textContent = _this3._tgtCurrency.options[_this3._tgtCurrency.selectedIndex].text;
+
+          _this3._tgtCurrencyAmountInfo.textContent = total;
+          _this3._tgtCurrencyNameInfo.textContent = _this3._srcCurrency.options[_this3._srcCurrency.selectedIndex].text;;
         } else {
-          _this2._toInput.value = total;
+          _this3._tgtCurrencyAmount.value = total;
+
+          _this3._srcCurrencyAmountInfo.textContent = event.target.value;
+          _this3._srcCurrencyNameInfo.textContent = _this3._srcCurrency.options[_this3._srcCurrency.selectedIndex].text;
+
+          _this3._tgtCurrencyAmountInfo.textContent = total;
+          _this3._tgtCurrencyNameInfo.textContent = _this3._tgtCurrency.options[_this3._tgtCurrency.selectedIndex].text;;
         }
       });
     }
@@ -3117,19 +3113,19 @@ var App = exports.App = function () {
     key: "_setupDomHooks",
     value: function _setupDomHooks(container) {
 
-      this._fromSelect = container.querySelector("#from");
-      this._toSelect = container.querySelector("#to");
-      this._convertButton = container.querySelector("#button");
-      this._fromInput = container.querySelector("#fromInput");
-      this._toInput = container.querySelector("#toInput");
+      this._srcCurrency = container.querySelector("#src-currency");
+      this._tgtCurrency = container.querySelector("#tgt-currancy");
+      this._srcCurrencyAmount = container.querySelector("#src-currency-amount");
+      this._tgtCurrencyAmount = container.querySelector("#tgt-currency-amount");
       this._srcCurrencyAmountInfo = container.querySelector("#info-src-amount");
       this._srcCurrencyNameInfo = container.querySelector("#info-src-currency");
       this._tgtCurrencyAmountInfo = container.querySelector("#info-tgt-amount");
       this._tgtCurrencyNameInfo = container.querySelector("#info-tgt-currency");
 
-      this._convertButton.addEventListener("click", this._convertEventHandler.bind(this));
-      this._fromInput.onchange = this._convertEventHandler.bind(this);
-      this._toInput.onchange = this._convertEventHandler.bind(this);
+      this._srcCurrency.onchange = this._convertEventHandler.bind(this);
+      this._tgtCurrency.onchange = this._convertEventHandler.bind(this);
+      this._srcCurrencyAmount.onchange = this._convertEventHandler.bind(this);
+      this._tgtCurrencyAmount.onchange = this._convertEventHandler.bind(this);
     }
   }, {
     key: "_performDefaultLookup",
@@ -3156,16 +3152,16 @@ var App = exports.App = function () {
                 _ref4 = (0, _slicedToArray3.default)(_ref3, 2);
                 defaultCountry = _ref4[0];
                 comparisonCountry = _ref4[1];
-                options = this._fromSelect.options;
+                options = this._srcCurrency.options;
 
                 // set select option of from and to elements to default currencies
 
                 for (i = 0; i < options.length; i++) {
                   if (options[i].text === defaultCountry.currencyName) {
-                    this._fromSelect.options[i].selected = true;
+                    this._srcCurrency.options[i].selected = true;
                   }
                   if (options[i].text === comparisonCountry.currencyName) {
-                    this._toSelect.options[i].selected = true;
+                    this._tgtCurrency.options[i].selected = true;
                   }
                 }
 
@@ -3180,8 +3176,8 @@ var App = exports.App = function () {
                 //convert rate and display for user
                 total = (0, _utils.calculateRate)(rate[rateName], 1);
 
-                this._toInput.value = total;
-                this._fromInput.value = 1;
+                this._tgtCurrencyAmount.value = total;
+                this._srcCurrencyAmount.value = 1;
 
                 this._srcCurrencyAmountInfo.textContent = 1;
                 this._srcCurrencyNameInfo.textContent = defaultCountry.currencyName;
@@ -3219,7 +3215,7 @@ var App = exports.App = function () {
 var _App = require("./App");
 
 new _App.App(document.getElementById("converter"));
-},{"./App":6}],165:[function(require,module,exports) {
+},{"./App":6}],100:[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 
@@ -3248,7 +3244,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '62264' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '64034' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 
@@ -3389,5 +3385,5 @@ function hmrAccept(bundle, id) {
     return hmrAccept(global.parcelRequire, id);
   });
 }
-},{}]},{},[165,4], null)
+},{}]},{},[100,4], null)
 //# sourceMappingURL=/js.30ed77a9.map
