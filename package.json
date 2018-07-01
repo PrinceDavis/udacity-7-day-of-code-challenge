@@ -1,0 +1,19 @@
+{
+  "name": "currency-converter",
+  "version": "1.0.0",
+  "description": "PWA that allow users to convert money from one currency to the another in one click",
+  "main": "index.js",
+  "author": "Ossaija ThankGod <codebugsolved@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "parcel index.html",
+    "build": "parcel build index.html"
+  },
+  "devDependencies": {
+    "autoprefixer": "^8.6.4",
+    "babel-core": "^6.26.3",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "eslint": "^5.0.1",
+    "idb": "^2.1.3"
+  }
+}
