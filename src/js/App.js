@@ -60,73 +60,64 @@ export class App {
   }
 
   _populateView() {
-    const fromSelect = this._fromSelect;
-    const toSelect = this._toSelect;
-    this._getCurrencies().then(currencies => {
-      for(const currency of currencies) {
-        fromSelect.options[fromSelect.options.length] = new Option(currency.currencyName, currency.currencyId);
-        toSelect.options[toSelect.options.length] = new Option(currency.currencyName, currency.currencyId);
+    this._getCurrencies().then(countries => {
+      for(const country of countries) {
+        this._srcCurrency.options[this._srcCurrency.options.length] = new Option(country.currencyName, country.currencyId);
+
+        this._tgtCurrency.options[this._tgtCurrency.options.length] = new Option(country.currencyName, country.currencyId);
       }
     })
   }
 
-  _convertEventHandler() {
-    const fromCurrency = this._fromSelect.options[this._fromSelect.selectedIndex].value;
-    const toCurrency = this._toSelect.options[this._toSelect.selectedIndex].value;
-    const fromAmount = this._fromInput.value;
-    const toAmount = this._toInput.value;
-    let fromCurrencyIsLead = false;
-    let toCurrencyIsLead = false;
-    let rateName
-    let amountToUse;
-
-    if(!fromCurrency || !toCurrency ) {
-      alert("Opps! I am having a hard time figuring out what you  me to do");
-      return;
+  _convertEventHandler(event) {
+    let toConvertFromTgt = false;
+    const srcCurrency = this._srcCurrency.options[this._srcCurrency.selectedIndex].value;
+    const tgtCurrency = this._tgtCurrency.options[this._tgtCurrency.selectedIndex].value;
+    let rateName =`${srcCurrency}_${tgtCurrency}`;
+    let amountToUse = this._srcCurrencyAmount.value;
+    if(event.target.id == "tgt-currency-amount") {
+      toConvertFromTgt = true;
+      rateName = `${tgtCurrency}_${srcCurrency}`;
+      amountToUse = this._tgtCurrencyAmount.value;
     }
-
-    if(
-      (!fromAmount && !toAmount) || (isNaN(fromAmount) && isNaN(toAmount)) || (isNaN(fromAmount) && !toAmount) || (!fromAmount && isNaN(toAmount))
-    ) {
-      alert("Opps! I am having a hard time figuring out what you want me to do");
-      return;
-    }
-  
-    if(!fromAmount || isNaN(fromAmount)) {
-      toCurrencyIsLead = true;
-      amountToUse  = toAmount;
-      rateName = `${toCurrency}_${fromCurrency}`;
-    }else {
-      fromCurrencyIsLead = true;
-      amountToUse = fromAmount
-      rateName = `${fromCurrency}_${toCurrency}`;
-    }
+    
     CurrencyConverterApi.getRate(rateName).then(rate => {
       const total = calculateRate(rate[rateName], amountToUse);
-      if(toCurrencyIsLead) {
-        this._fromInput.value = total;
+      if(toConvertFromTgt){
+        this._srcCurrencyAmount.value = total;
+
+        this._srcCurrencyAmountInfo.textContent = event.target.value;
+        this._srcCurrencyNameInfo.textContent = this._tgtCurrency.options[this._tgtCurrency.selectedIndex].text;
+
+        this._tgtCurrencyAmountInfo.textContent = total;
+        this._tgtCurrencyNameInfo.textContent = this._srcCurrency.options[this._srcCurrency.selectedIndex].text;;
       }else {
-        this._toInput.value = total;
+        this._tgtCurrencyAmount.value = total;
+
+        this._srcCurrencyAmountInfo.textContent = event.target.value;
+        this._srcCurrencyNameInfo.textContent = this._srcCurrency.options[this._srcCurrency.selectedIndex].text;
+
+        this._tgtCurrencyAmountInfo.textContent = total;
+        this._tgtCurrencyNameInfo.textContent = this._tgtCurrency.options[this._tgtCurrency.selectedIndex].text;;
       }
-    })
+    });
   }
 
   _setupDomHooks(container) {
 
-    this._fromSelect = container.querySelector("#from");
-    this._toSelect = container.querySelector("#to");
-    this._convertButton = container.querySelector("#button");
-    this._fromInput = container.querySelector("#fromInput");
-    this._toInput = container.querySelector("#toInput");
+    this._srcCurrency = container.querySelector("#src-currency");
+    this._tgtCurrency = container.querySelector("#tgt-currancy");
+    this._srcCurrencyAmount = container.querySelector("#src-currency-amount");
+    this._tgtCurrencyAmount = container.querySelector("#tgt-currency-amount");
     this._srcCurrencyAmountInfo = container.querySelector("#info-src-amount");
     this._srcCurrencyNameInfo = container.querySelector("#info-src-currency");
     this._tgtCurrencyAmountInfo = container.querySelector("#info-tgt-amount");
     this._tgtCurrencyNameInfo = container.querySelector("#info-tgt-currency");
 
-    this._convertButton.addEventListener("click", this._convertEventHandler.bind(this));
-    this._fromInput.onchange = this._convertEventHandler.bind(this);
-    this._toInput.onchange = this._convertEventHandler.bind(this);
-
+    this._srcCurrency.onchange = this._convertEventHandler.bind(this);
+    this._tgtCurrency.onchange = this._convertEventHandler.bind(this);
+    this._srcCurrencyAmount.onchange = this._convertEventHandler.bind(this);
+    this._tgtCurrencyAmount.onchange = this._convertEventHandler.bind(this);
   }
 
   async _performDefaultLookup() {
@@ -138,15 +129,15 @@ export class App {
         this._getCurrencies(countryFromIP.country_code) // is id the same as countryCode?
       ]);
 
-      const options = this._fromSelect.options;
+      const options = this._srcCurrency.options;
 
       // set select option of from and to elements to default currencies
       for(let i = 0; i < options.length; i++) {
         if(options[i].text === defaultCountry.currencyName) {
-          this._fromSelect.options[i].selected = true;
+          this._srcCurrency.options[i].selected = true;
         }
         if(options[i].text === comparisonCountry.currencyName) {
-          this._toSelect.options[i].selected = true;
+          this._tgtCurrency.options[i].selected = true;
         }
       }
 
@@ -155,8 +146,8 @@ export class App {
       const rate = await CurrencyConverterApi.getRate(rateName);
       //convert rate and display for user
       const total = calculateRate(rate[rateName], 1);
-      this._toInput.value = total;
-      this._fromInput.value = 1;
+      this._tgtCurrencyAmount.value = total;
+      this._srcCurrencyAmount.value = 1;
 
       this._srcCurrencyAmountInfo.textContent = 1;
       this._srcCurrencyNameInfo.textContent = defaultCountry.currencyName;
