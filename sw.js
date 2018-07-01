@@ -1,4 +1,4 @@
-const cacheName = "tg-currency--convertr1";
+const cacheName = "tg-currency--convertr2";
 
 self.addEventListener("install", event => {
   event.waitUntil(
@@ -21,7 +21,7 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
-  if(event.request.url.indexOf("currencies") === -1) {
+  if(event.request.url.indexOf("countries") === -1) {
     event.respondWith(
       caches.open(cacheName).then(cache => {
         return cache.match(event.request).then(res => 

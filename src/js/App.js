@@ -1,38 +1,20 @@
+import { openDatabase, convertObjToArray, calculateRate, getCountryFromIP } from "./utils";
 import { CurrencyConverterApi } from "./currency-converter-api";
-import idb from "idb";
+
+/* To Do */
 
 // Should I be reaching out to the dom all the time?
-
-const openDatabase = () => {
-  if(!navigator.serviceWorker) return Promise.resolve();
-
-  return idb.open("tg-currency-convertr", 1, upgradeDb => {
-    const currencyStore = upgradeDb.createObjectStore("currency", {keyPath: "id"})
-
-    currencyStore.createIndex("by-id", "id");
-  });
-}
-
-const convertObjToArray = obj => {
-  const array = [];
-  Object.keys(obj).forEach(key => {
-    array.push(obj[key]);
-  });
-  return array;
-}
-
-
+// clean up bad method naming
 
 export class App {
 
   constructor(container) {
-    this._setupDomHooks(container);
-
     this._dbPromise = openDatabase();
     this._registerServiceWorker();
-
     this._cacheCurrencies().then(() => {
+      this._setupDomHooks(container);
       this._populateView();
+      this._performDefaultLookup();
     });
 
     
@@ -53,8 +35,8 @@ export class App {
         (await CurrencyConverterApi.fetchCurrencies()).results
       )
       const db = await this._dbPromise;
-      const tx = db.transaction("currency", "readwrite");
-      const store = tx.objectStore("currency");
+      const tx = db.transaction("countries", "readwrite");
+      const store = tx.objectStore("countries");
       const index = store.index("by-id");
       const currencies = await index.getAll();
 
@@ -67,13 +49,64 @@ export class App {
     }
   }
 
+  _getCurrencies(id) {
+    return this._dbPromise.then(db => {
+      const index = db.transaction("countries").objectStore("countries").index("by-id");
+      if(id) {
+        return index.get(id);
+      }
+      return index.getAll();
+    });
+  }
+
   _populateView() {
     const fromSelect = this._fromSelect;
     const toSelect = this._toSelect;
     this._getCurrencies().then(currencies => {
       for(const currency of currencies) {
-        fromSelect.options[fromSelect.options.length] = new Option(currency.currencyName, currency.id);
-        toSelect.options[toSelect.options.length] = new Option(currency.currencyName, currency.id);
+        fromSelect.options[fromSelect.options.length] = new Option(currency.currencyName, currency.currencyId);
+        toSelect.options[toSelect.options.length] = new Option(currency.currencyName, currency.currencyId);
+      }
+    })
+  }
+
+  _convertEventHandler() {
+    const fromCurrency = this._fromSelect.options[this._fromSelect.selectedIndex].value;
+    const toCurrency = this._toSelect.options[this._toSelect.selectedIndex].value;
+    const fromAmount = this._fromInput.value;
+    const toAmount = this._toInput.value;
+    let fromCurrencyIsLead = false;
+    let toCurrencyIsLead = false;
+    let rateName
+    let amountToUse;
+
+    if(!fromCurrency || !toCurrency ) {
+      alert("Opps! I am having a hard time figuring out what you  me to do");
+      return;
+    }
+
+    if(
+      (!fromAmount && !toAmount) || (isNaN(fromAmount) && isNaN(toAmount)) || (isNaN(fromAmount) && !toAmount) || (!fromAmount && isNaN(toAmount))
+    ) {
+      alert("Opps! I am having a hard time figuring out what you want me to do");
+      return;
+    }
+  
+    if(!fromAmount || isNaN(fromAmount)) {
+      toCurrencyIsLead = true;
+      amountToUse  = toAmount;
+      rateName = `${toCurrency}_${fromCurrency}`;
+    }else {
+      fromCurrencyIsLead = true;
+      amountToUse = fromAmount
+      rateName = `${fromCurrency}_${toCurrency}`;
+    }
+    CurrencyConverterApi.getRate(rateName).then(rate => {
+      const total = calculateRate(rate[rateName], amountToUse);
+      if(toCurrencyIsLead) {
+        this._fromInput.value = total;
+      }else {
+        this._toInput.value = total;
       }
     })
   }
@@ -91,36 +124,38 @@ export class App {
     this._toInput.onchange = this._convertEventHandler.bind(this);
   }
 
-  _getCurrencies() {
-    return this._dbPromise.then(db => {
-      const index = db.transaction("currency").objectStore("currency").index("by-id");
-      return index.getAll();
-    });
-  }
+  async _performDefaultLookup() {
+    try {
+      const countryFromIP = await getCountryFromIP();
 
-  _convertEventHandler() {
-    const fromCurrency = this._fromSelect.options[this._fromSelect.selectedIndex].value;
-    const toCurrency = this._toSelect.options[this._toSelect.selectedIndex].value;
-    const fromAmount = this._fromInput.value;
-    const toAmount = this._toInput.value;
-    let fromAmountToUse = 0;
+      const [defaultCountry, comparisonCountry] = await Promise.all([
+        this._getCurrencies("US"),
+        this._getCurrencies(countryFromIP.countryCode) // is id the same as countryCode?
+      ]);
 
-    if(!fromCurrency || !toCurrency ) {
-      alert("Opps! I am having a hard time figuring out what you  me to do");
-      return;
+      const options = this._fromSelect.options;
+
+      // set select option of from and to elements to default currencies
+      for(let i = 0; i < options.length; i++) {
+        if(options[i].text === defaultCountry.currencyName) {
+          this._fromSelect.options[i].selected = true;
+        }
+        if(options[i].text === comparisonCountry.currencyName) {
+          this._toSelect.options[i].selected = true;
+        }
+      }
+
+      // get rate for default currencies
+      const rateName = `${defaultCountry.currencyId}_${comparisonCountry.currencyId}`;
+      const rate = await CurrencyConverterApi.getRate(rateName);
+      //convert rate and display for user
+      const total = calculateRate(rate[rateName], 1);
+      this._toInput.value = total;
+      this._fromInput.value = 1;
+
+    } catch (error) {
+      throw error;
     }
-
-    if(
-      (!fromAmount && !toAmount) || (isNaN(fromAmount) && isNaN(toAmount)) || (isNaN(fromAmount) && !toAmount) || (!fromAmount && isNaN(toAmount))
-    ) {
-      alert("Opps! I am having a hard time figuring out what you want me to do");
-      return;
-    }
-
-    fromAmountToUse = (!fromAmount || isNaN(fromAmount)) ? toAmount : fromAmount;
-    CurrencyConverterApi.getRate(fromCurrency, toCurrency).then(rate => {
-      console.log(rate);
-    })
   }
 }
 

@@ -104,7 +104,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   // Override the current require with this new one
   return newRequire;
 })({5:[function(require,module,exports) {
-var cacheName = "tg-currency--convertr1";
+var cacheName = "tg-currency--convertr2";
 
 self.addEventListener("install", function (event) {
   event.waitUntil(caches.open(cacheName).then(function (cache) {
@@ -121,7 +121,7 @@ self.addEventListener("activate", function (event) {
 });
 
 self.addEventListener("fetch", function (event) {
-  if (event.request.url.indexOf("currencies") === -1) {
+  if (event.request.url.indexOf("countries") === -1) {
     event.respondWith(caches.open(cacheName).then(function (cache) {
       return cache.match(event.request).then(function (res) {
         return res || fetch(event.request).then(function (netRes) {
